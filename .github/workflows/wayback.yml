@@ -1,0 +1,27 @@
+name: Wayback Machine
+
+on:
+  schedule:
+    # 09:00 and 21:00 UTC = 06:00 and 18:00 in Brasília (UTC-3)
+    - cron: '0 9,21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    name: Save 9bot.com.br
+    runs-on: ubuntu-latest
+    steps:
+      - name: Submit pages to the Wayback Machine
+        uses: JamieMagee/wayback@v2
+        with:
+          url: |-
+            https://9bot.com.br/pt
+            https://9bot.com.br/en
+            https://9bot.com.br/es
+            https://9bot.com.br/zh
+          saveErrors: false
+          saveOutlinks: false
+          saveScreenshot: true
