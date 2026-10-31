@@ -14,49 +14,40 @@ jobs:
     name: Save 9bot.com.br
     runs-on: ubuntu-latest
     steps:
-      - name: Save /pt
-        uses: JamieMagee/wayback@v2
-        with:
-          url: https://9bot.com.br/pt
-          saveErrors: false
-          saveOutlinks: false
-          saveScreenshot: true
-
-      - name: Wait 90 seconds
-        if: always()
-        run: sleep 90
-
-      - name: Save /en
-        if: always()
-        uses: JamieMagee/wayback@v2
-        with:
-          url: https://9bot.com.br/en
-          saveErrors: false
-          saveOutlinks: false
-          saveScreenshot: true
-
-      - name: Wait 90 seconds
-        if: always()
-        run: sleep 90
-
-      - name: Save /es
-        if: always()
-        uses: JamieMagee/wayback@v2
-        with:
-          url: https://9bot.com.br/es
-          saveErrors: false
-          saveOutlinks: false
-          saveScreenshot: true
-
-      - name: Wait 90 seconds
-        if: always()
-        run: sleep 90
-
-      - name: Save /zh
-        if: always()
-        uses: JamieMagee/wayback@v2
-        with:
-          url: https://9bot.com.br/zh
-          saveErrors: false
-          saveOutlinks: false
-          saveScreenshot: true
+      - name: Save pages one at a time (authenticated)
+        env:
+          IA_ACCESS: ${{ secrets.IA_ACCESS_KEY }}
+          IA_SECRET: ${{ secrets.IA_SECRET_KEY }}
+        run: |
+          failed=0
+          first=1
+          for url in https://9bot.com.br/pt https://9bot.com.br/en https://9bot.com.br/es https://9bot.com.br/zh; do
+            if [ "$first" -eq 0 ]; then sleep 60; fi
+            first=0
+            echo "Saving $url"
+            resp=$(curl -sS --retry 3 --retry-delay 20 --max-time 120 \
+              -H "Accept: application/json" \
+              -H "Authorization: LOW ${IA_ACCESS}:${IA_SECRET}" \
+              -d "url=${url}" -d "capture_screenshot=1" -d "skip_first_archive=1" \
+              https://web.archive.org/save) || { echo "::error::Request failed for $url"; failed=1; continue; }
+            job=$(echo "$resp" | jq -r '.job_id // empty')
+            if [ -z "$job" ]; then echo "::error::No job for $url: $resp"; failed=1; continue; fi
+            status=pending
+            for i in $(seq 1 40); do
+              sleep 6
+              st=$(curl -sS --retry 3 --max-time 60 \
+                -H "Accept: application/json" \
+                -H "Authorization: LOW ${IA_ACCESS}:${IA_SECRET}" \
+                "https://web.archive.org/save/status/${job}") || continue
+              status=$(echo "$st" | jq -r '.status // "pending"')
+              if [ "$status" != "pending" ]; then break; fi
+            done
+            if [ "$status" = "success" ]; then
+              ts=$(echo "$st" | jq -r '.timestamp')
+              echo "::notice::Saved https://web.archive.org/web/${ts}/${url}"
+            else
+              echo "::error::Capture of $url ended with status '$status': $(echo "$st" | jq -c '{status_ext,message}')"
+              failed=1
+            fi
+          done
+          exit $failed
