@@ -14,14 +14,49 @@ jobs:
     name: Save 9bot.com.br
     runs-on: ubuntu-latest
     steps:
-      - name: Submit pages to the Wayback Machine
+      - name: Save /pt
         uses: JamieMagee/wayback@v2
         with:
-          url: |-
-            https://9bot.com.br/pt
-            https://9bot.com.br/en
-            https://9bot.com.br/es
-            https://9bot.com.br/zh
+          url: https://9bot.com.br/pt
+          saveErrors: false
+          saveOutlinks: false
+          saveScreenshot: true
+
+      - name: Wait 90 seconds
+        if: always()
+        run: sleep 90
+
+      - name: Save /en
+        if: always()
+        uses: JamieMagee/wayback@v2
+        with:
+          url: https://9bot.com.br/en
+          saveErrors: false
+          saveOutlinks: false
+          saveScreenshot: true
+
+      - name: Wait 90 seconds
+        if: always()
+        run: sleep 90
+
+      - name: Save /es
+        if: always()
+        uses: JamieMagee/wayback@v2
+        with:
+          url: https://9bot.com.br/es
+          saveErrors: false
+          saveOutlinks: false
+          saveScreenshot: true
+
+      - name: Wait 90 seconds
+        if: always()
+        run: sleep 90
+
+      - name: Save /zh
+        if: always()
+        uses: JamieMagee/wayback@v2
+        with:
+          url: https://9bot.com.br/zh
           saveErrors: false
           saveOutlinks: false
           saveScreenshot: true
