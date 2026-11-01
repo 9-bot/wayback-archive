@@ -21,7 +21,7 @@ jobs:
         run: |
           failed=0
           first=1
-          for url in https://9bot.com.br/pt https://9bot.com.br/en https://9bot.com.br/es https://9bot.com.br/zh; do
+          for url in https://9bot.com.br/ https://9bot.com.br/pt https://9bot.com.br/en https://9bot.com.br/es https://9bot.com.br/zh; do
             if [ "$first" -eq 0 ]; then sleep 60; fi
             first=0
             echo "Saving $url"
